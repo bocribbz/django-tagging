@@ -295,6 +295,26 @@ class TestBasicTagging(TestCase):
         self.failUnless(get_tag('baz') in tags)
         self.failUnless(get_tag('foo') in tags)
 
+    def test_update_tags_without_replace(self):
+        Tag.objects.update_tags(self.dead_parrot, 'foo,bar,"ter"')
+        tags = Tag.objects.get_for_object(self.dead_parrot)
+        self.assertEquals(len(tags), 3)
+        self.failUnless(get_tag('foo') in tags)
+        self.failUnless(get_tag('bar') in tags)
+        self.failUnless(get_tag('ter') in tags)
+
+        Tag.objects.update_tags(
+            self.dead_parrot,
+            '"foo" bar "baz"',
+            replace_existing=False,
+        )
+        tags = Tag.objects.get_for_object(self.dead_parrot)
+        self.assertEquals(len(tags), 4)
+        self.failUnless(get_tag('bar') in tags)
+        self.failUnless(get_tag('baz') in tags)
+        self.failUnless(get_tag('foo') in tags)
+        self.failUnless(get_tag('ter') in tags)
+
     def test_add_tag(self):
         # start off in a known, mildly interesting state
         Tag.objects.update_tags(self.dead_parrot, 'foo bar baz')
