@@ -25,7 +25,7 @@ qn = connection.ops.quote_name
 
 
 class TagManager(models.Manager):
-    def update_tags(self, obj, tag_names):
+    def update_tags(self, obj, tag_names, replace_existing=True):
         """
         Update tags associated with an object.
         """
@@ -41,15 +41,17 @@ class TagManager(models.Manager):
         if force_lowercase:
             updated_tag_names = [t.lower() for t in updated_tag_names]
 
-        # Remove tags which no longer apply
-        tags_for_removal = [tag for tag in current_tags
-                            if tag.name not in updated_tag_names]
-        if len(tags_for_removal):
-            TaggedItem._default_manager.filter(
-                content_type__pk=ctype.pk,
-                object_id=obj.pk,
-                tag__in=tags_for_removal,
-            ).delete()
+        if replace_existing:
+            # Remove tags which no longer apply
+            tags_for_removal = [tag for tag in current_tags
+                                if tag.name not in updated_tag_names]
+            if len(tags_for_removal):
+                TaggedItem._default_manager.filter(
+                    content_type__pk=ctype.pk,
+                    object_id=obj.pk,
+                    tag__in=tags_for_removal,
+                ).delete()
+
         # Add new tags
         current_tag_names = [tag.name for tag in current_tags]
         for tag_name in updated_tag_names:
